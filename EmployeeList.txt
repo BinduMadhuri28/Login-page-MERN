@@ -1,0 +1,70 @@
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
+import './EmployeeTable.css';
+
+const EmployeeList = () => {
+  const [employees, setEmployees] = useState([]);
+
+  useEffect(() => {
+    fetchEmployees();
+  }, []);
+
+  const fetchEmployees = async () => {
+    try {
+      const res = await axios.get('/api/employees');
+      setEmployees(res.data);
+    } catch (err) {
+      console.error(err.message);
+    }
+  };
+
+  const deleteEmployee = async (id) => {
+    try {
+      await axios.delete(`/api/employees/${id}`);
+      setEmployees(employees.filter(employee => employee._id !== id));
+    } catch (err) {
+      console.error(err.message);
+    }
+  };
+
+  return (
+    <div>
+      <h1>Employees</h1>
+      <div className="table">
+        <div className="table-header">
+          <div className="table-row">
+            <div className="table-cell">Image</div>
+            <div className="table-cell">Name</div>
+            <div className="table-cell">Email</div>
+            <div className="table-cell">Mobile Number</div>
+            <div className="table-cell">Designation</div>
+            <div className="table-cell">Gender</div>
+            <div className="table-cell">Course</div>
+            <div className="table-cell">Created Date</div>
+            <div className="table-cell">Actions</div>
+          </div>
+        </div>
+        <div className="table-body">
+          {employees.map(employee => (
+            <div className="table-row" key={employee._id}>
+              <div className="table-cell"><img src={employee.image} alt={employee.name} width="50" height="50" /></div>
+              <div className="table-cell">{employee.name}</div>
+              <div className="table-cell">{employee.email}</div>
+              <div className="table-cell">{employee.mobileNumber}</div>
+              <div className="table-cell">{employee.designation}</div>
+              <div className="table-cell">{employee.gender}</div>
+              <div className="table-cell">{employee.course}</div>
+              <div className="table-cell">{new Date(employee.createdDate).toLocaleDateString()}</div>
+              <div className="table-cell">
+                <button onClick={() => {/* handle edit functionality here */}}>Edit</button>
+                <button onClick={() => deleteEmployee(employee._id)}>Delete</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default EmployeeList;

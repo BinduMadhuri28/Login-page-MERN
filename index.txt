@@ -1,0 +1,115 @@
+const cors = require('cors');
+const express = require('express');
+const mongoose = require('mongoose');
+const FormDataModel = require('./models/FormData');
+
+
+const app = express();
+app.use(express.json());
+app.use(cors());
+
+mongoose.connect('mongodb://127.0.0.1:27017/practice_mern');
+
+app.post('/register', (req, res) => {
+    // To post / insert data into database
+
+    const { email, password } = req.body;
+    FormDataModel.findOne({ email: email })
+        .then(user => {
+            if (user) {
+                res.json("Already registered")
+            }
+            else {
+                FormDataModel.create(req.body)
+                    .then(log_reg_form => res.json(log_reg_form))
+                    .catch(err => res.json(err))
+            }
+        })
+
+})
+
+app.post('/login', (req, res) => {
+    // To find record from the database
+    const { email, password } = req.body;
+    FormDataModel.findOne({ email: email })
+        .then(user => {
+            if (user) {
+                // If user found then these 2 cases
+                if (user.password === password) {
+                    res.json("Success");
+                }
+                else {
+                    res.json("Wrong password");
+                }
+            }
+            // If user not found then 
+            else {
+                res.json("No records found! ");
+            }
+        })
+})
+
+// Route to get all employees
+app.get('/api/employees', async (req, res) => {
+    try {
+        const employees = await Employee.find();
+        res.json(employees);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+const EmployeeSchema = new mongoose.Schema({
+    name: { type: String, required: true },
+    email: { type: String, required: true, unique: true },
+    mobileNumber: { type: String, required: true },
+    designation: { type: String, enum: ['Manager', 'Developer', 'Designer'], required: true },
+    gender: { type: String, enum: ['Male', 'Female', 'Other'], required: true },
+    course: { type: [String], enum: ['JavaScript', 'React', 'Node.js', 'MongoDB'] },
+    image: { type: String, required: true },
+    createdDate: { type: Date, default: Date.now }
+  });
+
+// Route to add a new employee
+app.post('/add', async (req, res) => {
+    const { name, email, mobileNumber, designation, gender, course, image } = req.body;
+  
+    try {
+      // Validate required fields
+      if (!name || !email || !mobileNumber || !designation || !gender || !course || !image) {
+        return res.status(400).json({ msg: 'Please fill in all fields' });
+      }
+  
+      // Check if employee with the same email already exists
+      let existingEmployee = await Employee.findOne({ email });
+      if (existingEmployee) {
+        return res.status(400).json({ msg: 'Employee with this email already exists' });
+      }
+  
+      // Create new employee
+      const newEmployee = new Employee({ name, email, mobileNumber, designation, gender, course, image });
+      const employee = await newEmployee.save();
+      res.json(employee);
+    } catch (err) {
+      console.error(err.message);
+      res.status(500).send('Server Error');
+    }
+  });
+
+// Route to delete an employee
+app.delete('/api/employees/:id', async (req, res) => {
+    try {
+        await Employee.findByIdAndDelete(req.params.id);
+        res.json({ msg: 'Employee deleted' });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+
+app.listen(3001, () => {
+    console.log("Server listining on http://127.0.0.1:3001");
+
+});

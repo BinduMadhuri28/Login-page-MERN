@@ -1,0 +1,113 @@
+import React, { useState } from 'react';
+import axios from 'axios';
+
+const AddEmployeeForm = () => {
+    const [formData, setFormData] = useState({
+        name: '',
+        email: '',
+        mobileNumber: '',
+        designation: '',
+        gender: '',
+        course: [],
+        image: '',
+    });
+
+    const { name, email, mobileNumber, designation, gender, course, image } = formData;
+
+    const onChange = e => setFormData({ ...formData, [e.target.name]: e.target.value });
+
+    const handleCheckboxChange = e => {
+        const value = e.target.value;
+        if (formData.course.includes(value)) {
+            setFormData({ ...formData, course: formData.course.filter(item => item !== value) });
+        } else {
+            setFormData({ ...formData, course: [...formData.course, value] });
+        }
+    };
+
+    const onSubmit = async e => {
+        e.preventDefault();
+
+        const config = {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        };
+
+        try {
+            const res = await axios.post('/api/employees/add', formData, config);
+            console.log(res.data); // Handle success response
+        } catch (err) {
+            console.error(err.response.data); // Handle error response
+        }
+    };
+
+    const handleFileChange = async e => {
+        const file = e.target.files[0];
+        const formData = new FormData();
+        formData.append('image', file);
+
+        try {
+            const res = await axios.post('/api/upload', formData);
+            setFormData({ ...formData, image: res.data.imagePath });
+        } catch (err) {
+            console.error('Image upload error:', err);
+        }
+    };
+
+    return (
+        <div>
+            <h2>Add Employee</h2>
+            <div className="collapse navbar-collapse" id="navbarNav">
+                <ul className="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li className="nav-item">
+                        <Link to='/addEmployee' className="btn btn-light my-5">Add Employee</Link>
+                    </li>
+                </ul>
+            </div>
+            <form onSubmit={onSubmit}>
+                <div>
+                    <label>Name:</label>
+                    <input type="text" name="name" value={name} onChange={onChange} required />
+                </div>
+                <div>
+                    <label>Email:</label>
+                    <input type="email" name="email" value={email} onChange={onChange} required />
+                </div>
+                <div>
+                    <label>Mobile Number:</label>
+                    <input type="text" name="mobileNumber" value={mobileNumber} onChange={onChange} required />
+                </div>
+                <div>
+                    <label>Designation:</label>
+                    <select name="designation" value={designation} onChange={onChange} required>
+                        <option value="">Select...</option>
+                        <option value="Manager">Manager</option>
+                        <option value="Developer">Developer</option>
+                        <option value="Designer">Designer</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Gender:</label>
+                    <label><input type="radio" name="gender" value="Male" onChange={onChange} required /> Male</label>
+                    <label><input type="radio" name="gender" value="Female" onChange={onChange} /> Female</label>
+                    <label><input type="radio" name="gender" value="Other" onChange={onChange} /> Other</label>
+                </div>
+                <div>
+                    <label>Courses:</label>
+                    <label><input type="checkbox" name="course" value="JavaScript" onChange={handleCheckboxChange} /> JavaScript</label>
+                    <label><input type="checkbox" name="course" value="React" onChange={handleCheckboxChange} /> React</label>
+                    <label><input type="checkbox" name="course" value="Node.js" onChange={handleCheckboxChange} /> Node.js</label>
+                    <label><input type="checkbox" name="course" value="MongoDB" onChange={handleCheckboxChange} /> MongoDB</label>
+                </div>
+                <div>
+                    <label>Image:</label>
+                    <input type="file" name="image" onChange={handleFileChange} required />
+                </div>
+                <button type="submit">Submit</button>
+            </form>
+        </div>
+    );
+};
+
+export default AddEmployeeForm;
